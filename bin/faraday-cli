@@ -1,23 +1,49 @@
 #!/usr/bin/env ruby
 
 if ENV['DEVELOPER_ENV'] == 'true'
-  $LOAD_PATH.unshift(File.join(File.dirname(__FILE__),'..','lib'))
+  $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', 'lib'))
 end
 
+require 'optparse'
 require 'faraday/cli'
-require 'commander/import'
 
-program :version, Faraday::CLI::VERSION
-program :description, 'Ruby Faraday CLI'
+CLI_OPTIONS = {}
+OptionParser.new do |o|
 
-global_option '--verbose' do
-  $VERBOSE = true
+  o.banner.concat(' <url>')
+
+  CLI_OPTIONS[:http_method]= 'get'
+  o.on('-X', '--request COMMAND', 'Specify http request command to use') do |http_method|
+    CLI_OPTIONS[:http_method]= http_method.to_s.strip.downcase
+  end
+
+  CLI_OPTIONS[:http_headers]= []
+  o.on('-H', '--header HEADER:VALUE', 'Pass custom header LINE to server (H)') do |header|
+    CLI_OPTIONS[:http_headers].push(header.split(':'))
+  end
+
+  o.on('-A', '--user-agent STRING', 'Send User-Agent STRING to server (H)') do |user_agent|
+    CLI_OPTIONS[:user_agent]= user_agent
+  end
+
+  o.on('-d', '--data PAYLOAD_STRING', 'HTTP POST data (H)') { |payload| CLI_OPTIONS[:payload]= payload }
+  o.on('--data_file FILE_PATH', 'Read file content for use as payload') do |payload_file|
+    CLI_OPTIONS[:payload]= File.read(payload_file)
+  end
+
+  o.on('-o', '--output FILE_PATH', 'Write to FILE instead of stdout') { |out_file_path| CLI_OPTIONS[:out_file]= out_file_path }
+
+  o.on('-x', '--proxy HOST:PORT', 'HOST[:PORT] Use proxy on given port') do |host_port_str|
+    host, port = host_port_str.split(':')
+    port = '80' if port.nil?
+
+    CLI_OPTIONS[:proxy]= {host: host, port: port}
+  end
+
+  o.on('-V', '--version', 'Show version number and quit') { $stdout.puts(Faraday::CLI::VERSION); exit }
+  o.parse!
+
 end
 
-# command :test do |c|
-#   c.syntax = 'some args'
-#   c.summary = 'test cli command'
-#   c.action do |args, options|
-#
-#   end
-# end
+p CLI_OPTIONS
+p ARGV

@@ -1,7 +1,7 @@
 require 'faraday'
 module Faraday::CLI
-  require 'faraday/cli/version'
 
-  # Your code goes here...
+  require 'faraday/cli/version'
+  require 'faraday/cli/client'
 
 end
