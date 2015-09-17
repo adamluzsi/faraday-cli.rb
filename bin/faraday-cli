@@ -1,0 +1,23 @@
+#!/usr/bin/env ruby
+
+if ENV['DEVELOPER_ENV'] == 'true'
+  $LOAD_PATH.unshift(File.join(File.dirname(__FILE__),'..','lib'))
+end
+
+require 'faraday/cli'
+require 'commander/import'
+
+program :version, Faraday::CLI::VERSION
+program :description, 'Ruby Faraday CLI'
+
+global_option '--verbose' do
+  $VERBOSE = true
+end
+
+# command :test do |c|
+#   c.syntax = 'some args'
+#   c.summary = 'test cli command'
+#   c.action do |args, options|
+#
+#   end
+# end
