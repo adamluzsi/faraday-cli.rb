@@ -7,10 +7,13 @@ end
 require 'optparse'
 require 'faraday/cli'
 
+
 CLI_OPTIONS = {}
 OptionParser.new do |o|
 
   o.banner.concat(' <url>')
+
+  o.on('-V', '--version', 'Show version number and quit') { $stdout.puts(Faraday::CLI::VERSION); exit }
 
   CLI_OPTIONS[:http_method]= 'get'
   o.on('-X', '--request COMMAND', 'Specify http request command to use') do |http_method|
@@ -22,28 +25,54 @@ OptionParser.new do |o|
     CLI_OPTIONS[:http_headers].push(header.split(':'))
   end
 
-  o.on('-A', '--user-agent STRING', 'Send User-Agent STRING to server (H)') do |user_agent|
-    CLI_OPTIONS[:user_agent]= user_agent
+  CLI_OPTIONS[:params]= []
+  o.on('-q','--query key=value','Pass Query key values to use in the request') do |raw_query_pair|
+    CLI_OPTIONS[:params].push(raw_query_pair.split('='))
   end
 
-  o.on('-d', '--data PAYLOAD_STRING', 'HTTP POST data (H)') { |payload| CLI_OPTIONS[:payload]= payload }
-  o.on('--data_file FILE_PATH', 'Read file content for use as payload') do |payload_file|
-    CLI_OPTIONS[:payload]= File.read(payload_file)
-  end
+  # o.on('-d', '--data PAYLOAD_STRING', 'HTTP POST data (H)') { |payload| CLI_OPTIONS[:payload]= payload }
+  # o.on('--data_file FILE_PATH', 'Read file content for use as payload') do |payload_file|
+  #   CLI_OPTIONS[:payload]= File.read(payload_file)
+  # end
+  #
+  # o.on('-A', '--user-agent STRING', 'Send User-Agent STRING to server (H)') do |user_agent|
+  #   CLI_OPTIONS[:user_agent]= user_agent
+  # end
+  #
+  # o.on('-o', '--output FILE_PATH', 'Write to FILE instead of stdout') { |out_file_path| CLI_OPTIONS[:out_file]= out_file_path }
+  #
+  # o.on('-x', '--proxy HOST:PORT', 'HOST[:PORT] Use proxy on given port') do |host_port_str|
+  #   host, port = host_port_str.split(':')
+  #   port = '80' if port.nil?
+  #
+  #   CLI_OPTIONS[:proxy]= {host: host, port: port}
+  # end
 
-  o.on('-o', '--output FILE_PATH', 'Write to FILE instead of stdout') { |out_file_path| CLI_OPTIONS[:out_file]= out_file_path }
-
-  o.on('-x', '--proxy HOST:PORT', 'HOST[:PORT] Use proxy on given port') do |host_port_str|
-    host, port = host_port_str.split(':')
-    port = '80' if port.nil?
-
-    CLI_OPTIONS[:proxy]= {host: host, port: port}
-  end
-
-  o.on('-V', '--version', 'Show version number and quit') { $stdout.puts(Faraday::CLI::VERSION); exit }
   o.parse!
 
 end
 
-p CLI_OPTIONS
-p ARGV
+# p CLI_OPTIONS
+# p ARGV
+
+ALLOWED_HTTP_METHODS = %w(get head post put patch delete options)
+raise('invalid http method given') unless ALLOWED_HTTP_METHODS.include?(CLI_OPTIONS[:http_method])
+conn = Faraday.new
+
+Faraday::CLI::MiddlewareFetcher.extend!(conn)
+
+response = conn.public_send(CLI_OPTIONS[:http_method]) do |request|
+  request.url(ARGV[0])
+
+  CLI_OPTIONS[:http_headers].each do |key, value|
+    request.headers[key]=value
+  end
+
+  CLI_OPTIONS[:params].each do |key,value|
+    request.params[key]=value
+  end
+
+end
+
+
+$stdout.puts Faraday::CLI::ResponseFormatter.format(response)
