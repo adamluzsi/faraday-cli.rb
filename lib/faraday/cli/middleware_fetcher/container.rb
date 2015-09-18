@@ -1,6 +1,7 @@
 require 'forwardable'
 class Faraday::CLI::MiddlewareFetcher::Container
 
+  #TODO: remove support for adapter set
   extend Forwardable
   def_delegators :@builder, :use, :request, :response, :adapter
 
