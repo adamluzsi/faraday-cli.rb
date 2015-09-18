@@ -11,7 +11,7 @@ Gem::Specification.new do |spec|
 
   spec.summary       = %q{Console line interface for faraday gem.}
   spec.description   = %q{Console line interface for faraday gem client so you can use your favorite middleware based ruby http client on the terminal!}
-  spec.homepage      = "https://github.com/adamluzsi/faraday-cli.rb"
+  spec.homepage      = 'https://github.com/adamluzsi/faraday-cli.rb'
 
   spec.files         = `git ls-files -z`.split("\x0").reject { |f| f.match(%r{^(test|spec|features)/}) }
   spec.bindir        = 'bin'

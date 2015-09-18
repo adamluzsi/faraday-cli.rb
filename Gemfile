@@ -1,4 +1,9 @@
 source 'https://rubygems.org'
 
-# Specify your gem's dependencies in faraday-cli.gemspec
 gemspec
+
+gem 'rack'
+gem 'escher'
+gem 'escher-keypool'
+gem 'escher-rack_middleware'
+gem 'faraday_middleware-escher'

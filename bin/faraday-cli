@@ -1,14 +1,13 @@
 #!/usr/bin/env ruby
-
-if ENV['DEVELOPER_ENV'] == 'true'
-  $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', 'lib'))
-end
+# if ENV['DEVELOPER_ENV'] == 'true'
+#   $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', 'lib'))
+# end
 
 require 'optparse'
 require 'faraday/cli'
 
-
 CLI_OPTIONS = {}
+CLI_OPTIONS[:flags]= []
 OptionParser.new do |o|
 
   o.banner.concat(' <url>')
@@ -26,21 +25,38 @@ OptionParser.new do |o|
   end
 
   CLI_OPTIONS[:params]= []
-  o.on('-q','--query key=value','Pass Query key values to use in the request') do |raw_query_pair|
+  o.on('-q', '--query key=value', 'Pass Query key values to use in the request') do |raw_query_pair|
     CLI_OPTIONS[:params].push(raw_query_pair.split('='))
   end
 
-  # o.on('-d', '--data PAYLOAD_STRING', 'HTTP POST data (H)') { |payload| CLI_OPTIONS[:payload]= payload }
-  # o.on('--data_file FILE_PATH', 'Read file content for use as payload') do |payload_file|
-  #   CLI_OPTIONS[:payload]= File.read(payload_file)
-  # end
-  #
-  # o.on('-A', '--user-agent STRING', 'Send User-Agent STRING to server (H)') do |user_agent|
-  #   CLI_OPTIONS[:user_agent]= user_agent
-  # end
-  #
-  # o.on('-o', '--output FILE_PATH', 'Write to FILE instead of stdout') { |out_file_path| CLI_OPTIONS[:out_file]= out_file_path }
-  #
+  o.on('-d', '--data PAYLOAD_STRING', 'HTTP POST data (H)') { |payload| CLI_OPTIONS[:body]= payload }
+
+  o.on('--upload_file KEY=FILE_PATH[:CONTENT_TYPE]', 'Pass File upload io in the request pointing to the given file') do |payload_file_path|
+
+    CLI_OPTIONS[:flags] << :multipart
+
+    parts = payload_file_path.split('=')
+    raw_file_path = parts.pop
+    key = parts.first
+
+    file_path, content_type = raw_file_path.split(':')
+    content_type ||= 'application/octet-stream'
+
+    file_stream_io = Faraday::UploadIO.new(File.realpath(file_path), content_type)
+
+    CLI_OPTIONS[:body] = {key => file_stream_io}
+
+  end
+
+  o.on('-A', '--user-agent STRING', 'Send User-Agent STRING to server (H)') do |user_agent|
+    CLI_OPTIONS[:http_headers] << ['User-Agent', user_agent]
+  end
+
+  o.on('-o', '--output FILE_PATH', 'Write to FILE instead of stdout') do |out_file_path|
+    $stdout.reopen(out_file_path, 'a+')
+    $stderr.reopen(out_file_path, 'a+')
+  end
+
   # o.on('-x', '--proxy HOST:PORT', 'HOST[:PORT] Use proxy on given port') do |host_port_str|
   #   host, port = host_port_str.split(':')
   #   port = '80' if port.nil?
@@ -48,31 +64,46 @@ OptionParser.new do |o|
   #   CLI_OPTIONS[:proxy]= {host: host, port: port}
   # end
 
+  o.on('-s', '--silent', "Silent mode (don't output anything)") { CLI_OPTIONS[:flags] << :silent }
+
+  CLI_OPTIONS[:config_file_paths]= []
+  o.on('-c', '--config FILE_PATH', 'File path to the .faraday.rb if you want use other than default') do |file_path|
+    CLI_OPTIONS[:config_file_paths] << File.realpath(file_path)
+  end
+
   o.parse!
 
 end
 
-# p CLI_OPTIONS
-# p ARGV
-
 ALLOWED_HTTP_METHODS = %w(get head post put patch delete options)
 raise('invalid http method given') unless ALLOWED_HTTP_METHODS.include?(CLI_OPTIONS[:http_method])
-conn = Faraday.new
 
-Faraday::CLI::MiddlewareFetcher.extend!(conn)
+connection = Faraday.new do |builder|
+  Faraday::CLI::MiddlewareFetcher.extend!(builder, *CLI_OPTIONS[:config_file_paths])
 
-response = conn.public_send(CLI_OPTIONS[:http_method]) do |request|
+  builder.request(:multipart) if CLI_OPTIONS[:flags].include?(:multipart)
+  builder.response :logger unless CLI_OPTIONS[:flags].include?(:silent)
+
+  builder.adapter(:net_http)
+
+end
+
+response = connection.public_send(CLI_OPTIONS[:http_method].downcase) do |request|
+
   request.url(ARGV[0])
 
   CLI_OPTIONS[:http_headers].each do |key, value|
     request.headers[key]=value
   end
 
-  CLI_OPTIONS[:params].each do |key,value|
+  CLI_OPTIONS[:params].each do |key, value|
     request.params[key]=value
   end
+
+  request.body = CLI_OPTIONS[:body] unless CLI_OPTIONS[:body].nil?
 
 end
 
 
-$stdout.puts Faraday::CLI::ResponseFormatter.format(response)
+$stdout.puts Faraday::CLI::ResponseFormatter.format(response) unless CLI_OPTIONS[:flags].include?(:silent)
+exit(1) unless (200..299).include?(response.status)
