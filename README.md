@@ -21,6 +21,47 @@ Or install it yourself as:
 
 ## Usage
 
+#### Basic 
+
+    $ faraday-cli --help
+      Usage: faraday-cli [options] <url>
+          -V, --version                    Show version number and quit
+          -X, --request COMMAND            Specify http request command to use
+          -H, --header HEADER:VALUE        Pass custom header LINE to server (H)
+          -q, --query key=value            Pass Query key values to use in the request
+   
+    $ faraday-cli http://www.google.com -q "q=hello world"
+
+#### Advanced 
+
+because it's faraday, you can use faraday middlewares as how you pleased
+just make a file with the following name: ".faraday.rb"
+ 
+```ruby
+
+class MyAwesomeMiddleware
+
+  def initialize(app)
+    @app = app
+  end
+
+  def call(env)
+    puts env.object_id
+    @app.call(env)
+  end
+
+end
+
+use MyAwesomeMiddleware
+
+```
+
+By default it will look for the current runtime directory for this file. 
+If you are in a project, than it will look for the project folder (Ruby project).
+If still nothing than for the last place to look it will check for Home folder to find a default middleware file.
+
+With that you can use all kind of stuff out of the box with your faraday-cli, such as Amazon v3 authentication, or
+ anything that is on the internet :D
 
 ## Development
 

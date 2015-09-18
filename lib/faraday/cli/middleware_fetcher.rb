@@ -11,6 +11,9 @@ module Faraday::CLI::MiddlewareFetcher
 
     case true
 
+      when File.exist?(File.join(Dir.pwd, file_name))
+        container.merge!(File.join(Dir.pwd, file_name))
+
       when File.exist?(File.join(PWD.pwd, file_name))
         container.merge!(File.join(PWD.pwd, file_name))
 
