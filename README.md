@@ -21,21 +21,32 @@ Or install it yourself as:
 
 ## Usage
 
-#### Basic 
+### CLI options
 
-    $ faraday-cli --help
-      Usage: faraday-cli [options] <url>
-          -V, --version                    Show version number and quit
-          -X, --request COMMAND            Specify http request command to use
-          -H, --header HEADER:VALUE        Pass custom header LINE to server (H)
-          -q, --query key=value            Pass Query key values to use in the request
-   
-    $ faraday-cli http://www.google.com -q "q=hello world"
+```shell
+Usage: faraday-cli [options] <url>
+    -V, --version                    Show version number and quit
+    -X, --request COMMAND            Specify http request command to use
+    -H, --header HEADER:VALUE        Pass custom header LINE to server (H)
+    -q, --query key=value            Pass Query key values to use in the request
+    -d, --data PAYLOAD_STRING        HTTP POST data (H)
+        --upload_file KEY=FILE_PATH[:CONTENT_TYPE]
+                                     Pass File upload io in the request pointing to the given file
+    -A, --user-agent STRING          Send User-Agent STRING to server (H)
+    -o, --output FILE_PATH           Write to FILE instead of stdout
+    -s, --silent                     Silent mode (don't output anything)
+    -c, --config FILE_PATH           File path to the .faraday.rb if you want use other than default
 
-#### Advanced 
+faraday-cli http://www.google.com -q "q=hello world"
+```
 
-because it's faraday, you can use faraday middlewares as how you pleased
-just make a file with the following name: ".faraday.rb"
+### Middleware use
+
+You can use middlewares with ".faraday.rb" file. 
+Put any middleware related configuration into the file,
+and use the 'use' method to include into the faraday connection.
+
+you can use any faraday middlewares as how you pleased.
  
 ```ruby
 
