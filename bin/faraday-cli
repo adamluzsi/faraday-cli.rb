@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
-# if ENV['DEVELOPER_ENV'] == 'true'
-#   $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', 'lib'))
-# end
+if ENV['DEVELOPER_ENV'] == 'true'
+  $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', 'lib'))
+end
 
 require 'optparse'
 require 'faraday/cli'
@@ -68,7 +68,7 @@ OptionParser.new do |o|
 
   CLI_OPTIONS[:config_file_paths]= []
   o.on('-c', '--config FILE_PATH', 'File path to the .faraday.rb if you want use other than default') do |file_path|
-    CLI_OPTIONS[:config_file_paths] << File.realpath(file_path)
+    CLI_OPTIONS[:config_file_paths] << File.absolute_path(file_path)
   end
 
   o.on('-M','--middlewares','Show current middleware stack') do
