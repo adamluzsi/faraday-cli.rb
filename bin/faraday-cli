@@ -64,6 +64,10 @@ OptionParser.new do |o|
   #   CLI_OPTIONS[:proxy]= {host: host, port: port}
   # end
 
+  o.on('-v','--verbose','Make the operation more talkative') do
+    CLI_OPTIONS[:flags] << :verbose
+  end
+
   o.on('-s', '--silent', "Silent mode (don't output anything)") { CLI_OPTIONS[:flags] << :silent }
 
   CLI_OPTIONS[:config_file_paths]= []
@@ -86,7 +90,7 @@ connection = Faraday.new do |builder|
   Faraday::CLI::MiddlewareFetcher.extend!(builder, *CLI_OPTIONS[:config_file_paths])
 
   builder.request(:multipart) if CLI_OPTIONS[:flags].include?(:multipart)
-  builder.response :logger unless CLI_OPTIONS[:flags].include?(:silent)
+  builder.response :logger if !CLI_OPTIONS[:flags].include?(:silent) && CLI_OPTIONS[:flags].include?(:verbose)
 
   builder.adapter(:net_http)
 
