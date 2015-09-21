@@ -36,8 +36,10 @@ Usage: faraday-cli [options] <url>
     -o, --output FILE_PATH           Write to FILE instead of stdout
     -s, --silent                     Silent mode (don't output anything)
     -c, --config FILE_PATH           File path to the .faraday.rb if you want use other than default
-
-faraday-cli http://www.google.com -q "q=hello world"
+    -M, --middlewares                Show current middleware stack
+    
+faraday-cli http://www.google.com -q q=foo
+faraday-cli http://example.org -d "payload string"
 ```
 
 ### Middleware use
