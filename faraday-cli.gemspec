@@ -1,11 +1,9 @@
 # coding: utf-8
-lib = File.expand_path('../lib', __FILE__)
-$LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
-require 'faraday/cli'
+VERSION = File.read(File.join(File.dirname(__FILE__),'VERSION')).strip
 
 Gem::Specification.new do |spec|
   spec.name          = "faraday-cli"
-  spec.version       = Faraday::CLI::VERSION
+  spec.version       = VERSION
   spec.authors       = ["Adam Luzsi"]
   spec.email         = ["adamluzsi@gmail.com"]
 
