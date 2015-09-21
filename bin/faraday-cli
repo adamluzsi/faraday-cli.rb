@@ -1,5 +1,5 @@
 #!/usr/bin/env ruby
-if ENV['DEVELOPER_ENV'] == 'true'
+if ENV['FARADAY_CLI_DEVELOPER_ENV'] == 'true'
   $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', 'lib'))
 end
 
