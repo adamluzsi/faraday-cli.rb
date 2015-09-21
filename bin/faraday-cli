@@ -71,6 +71,10 @@ OptionParser.new do |o|
     CLI_OPTIONS[:config_file_paths] << File.realpath(file_path)
   end
 
+  o.on('-M','--middlewares','Show current middleware stack') do
+    CLI_OPTIONS[:flags] << :show_middlewares
+  end
+
   o.parse!
 
 end
@@ -87,6 +91,12 @@ connection = Faraday.new do |builder|
   builder.adapter(:net_http)
 
 end
+
+if CLI_OPTIONS[:flags].include?(:show_middlewares)
+  $stdout.puts(connection.builder.handlers.map(&:inspect))
+  exit
+end
+
 
 response = connection.public_send(CLI_OPTIONS[:http_method].downcase) do |request|
 
