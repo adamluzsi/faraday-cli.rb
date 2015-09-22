@@ -110,9 +110,9 @@ if CLI_OPTIONS[:flags].include?(:show_middlewares)
   exit
 end
 
-
 response = connection.public_send(CLI_OPTIONS[:http_method].downcase) do |request|
 
+  raise('Missing URL for request!') if ARGV[0].nil?
   request.url(ARGV[0])
 
   CLI_OPTIONS[:http_headers].each do |key, value|

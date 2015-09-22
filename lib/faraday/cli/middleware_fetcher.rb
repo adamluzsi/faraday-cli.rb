@@ -19,6 +19,10 @@ module Faraday::CLI::MiddlewareFetcher
 
       when !config_file_paths.empty?
         config_file_paths.reduce([]) do |file_paths, given_path|
+          if File.directory?(given_path)
+            given_path = File.join(given_path,'*.rb')
+          end
+
           file_paths.push(*Dir.glob(given_path)); file_paths
         end
 
