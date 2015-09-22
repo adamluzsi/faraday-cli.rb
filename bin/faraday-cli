@@ -71,13 +71,19 @@ OptionParser.new do |o|
   o.on('-s', '--silent', "Silent mode (don't output anything)") { CLI_OPTIONS[:flags] << :silent }
 
   CLI_OPTIONS[:config_file_paths]= []
-  o.on('-c', '--config FILE_PATH', 'File path to the .faraday.rb if you want use other than default') do |file_path|
+  o.on('-K', '--config FILE_PATH', 'File path to the .faraday.rb if you want use other than default') do |file_path|
     CLI_OPTIONS[:config_file_paths] << File.absolute_path(file_path)
   end
 
   o.on('-M','--middlewares','Show current middleware stack') do
     CLI_OPTIONS[:flags] << :show_middlewares
   end
+
+  o.on('-W','--without_middlewares','Make request without consuming middleware file(s)') do
+    CLI_OPTIONS[:flags] << :without_middlewares
+  end
+
+  # Z
 
   o.parse!
 
@@ -87,7 +93,10 @@ ALLOWED_HTTP_METHODS = %w(get head post put patch delete options)
 raise('invalid http method given') unless ALLOWED_HTTP_METHODS.include?(CLI_OPTIONS[:http_method])
 
 connection = Faraday.new do |builder|
-  Faraday::CLI::MiddlewareFetcher.extend!(builder, *CLI_OPTIONS[:config_file_paths])
+
+  unless CLI_OPTIONS[:flags].include?(:without_middlewares)
+    Faraday::CLI::MiddlewareFetcher.extend!(builder, *CLI_OPTIONS[:config_file_paths])
+  end
 
   builder.request(:multipart) if CLI_OPTIONS[:flags].include?(:multipart)
   builder.response :logger if !CLI_OPTIONS[:flags].include?(:silent) && CLI_OPTIONS[:flags].include?(:verbose)
