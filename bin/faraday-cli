@@ -127,6 +127,5 @@ response = connection.public_send(CLI_OPTIONS[:http_method].downcase) do |reques
 
 end
 
-
 $stdout.puts Faraday::CLI::ResponseFormatter.format(response,*CLI_OPTIONS[:flags]) unless CLI_OPTIONS[:flags].include?(:silent)
-exit(1) unless (200..299).include?(response.status)
+exit(1) if (400..599).include?(response.status)
