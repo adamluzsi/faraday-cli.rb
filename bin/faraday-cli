@@ -3,99 +3,11 @@ if ENV['FARADAY_CLI_DEVELOPER_ENV'] == 'true'
   $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', 'lib'))
 end
 
-require 'optparse'
 require 'faraday/cli'
 
-CLI_OPTIONS = {}
-CLI_OPTIONS[:flags]= []
-OptionParser.new do |o|
+CLI_OPTIONS = Faraday::CLI::Option::Parser.new.parse!
+Faraday::CLI::Option::Validator.validate(CLI_OPTIONS)
 
-  o.banner.concat(' <url>')
-
-  o.on('-V', '--version', 'Show version number and quit') { $stdout.puts(Faraday::CLI::VERSION); exit }
-
-  CLI_OPTIONS[:http_method]= 'get'
-  o.on('-X', '--request COMMAND', 'Specify http request command to use') do |http_method|
-    CLI_OPTIONS[:http_method]= http_method.to_s.strip.downcase
-  end
-
-  CLI_OPTIONS[:http_headers]= []
-  o.on('-H', '--header HEADER:VALUE', 'Pass custom header LINE to server (H)') do |header|
-    CLI_OPTIONS[:http_headers].push(header.split(':'))
-  end
-
-  CLI_OPTIONS[:params]= []
-  o.on('-q', '--query key=value', 'Pass Query key values to use in the request') do |raw_query_pair|
-    CLI_OPTIONS[:params].push(raw_query_pair.split('='))
-  end
-
-  o.on('-d', '--data PAYLOAD_STRING', 'HTTP POST data (H)') { |payload| CLI_OPTIONS[:body]= payload }
-
-  o.on('--upload_file KEY=FILE_PATH[:CONTENT_TYPE]', 'Pass File upload io in the request pointing to the given file') do |payload_file_path|
-
-    CLI_OPTIONS[:flags] << :multipart
-
-    parts = payload_file_path.split('=')
-    raw_file_path = parts.pop
-    key = parts.first
-
-    file_path, content_type = raw_file_path.split(':')
-    content_type ||= 'application/octet-stream'
-
-    file_stream_io = Faraday::UploadIO.new(File.realpath(file_path), content_type)
-
-    CLI_OPTIONS[:body] = {key => file_stream_io}
-
-  end
-
-  o.on('-A', '--user-agent STRING', 'Send User-Agent STRING to server (H)') do |user_agent|
-    CLI_OPTIONS[:http_headers] << ['User-Agent', user_agent]
-  end
-
-  o.on('-o', '--output FILE_PATH', 'Write to FILE instead of stdout') do |out_file_path|
-    $stdout.reopen(out_file_path, 'a+')
-    $stderr.reopen(out_file_path, 'a+')
-  end
-
-  # o.on('-x', '--proxy HOST:PORT', 'HOST[:PORT] Use proxy on given port') do |host_port_str|
-  #   host, port = host_port_str.split(':')
-  #   port = '80' if port.nil?
-  #
-  #   CLI_OPTIONS[:proxy]= {host: host, port: port}
-  # end
-
-  o.on('-v', '--verbose', 'Make the operation more talkative') do
-    CLI_OPTIONS[:flags] << :verbose
-  end
-
-  o.on('-s', '--silent', "Silent mode (don't output anything)") do
-    CLI_OPTIONS[:flags] << :silent
-    $stdout.reopen('/dev/null', 'a+')
-    $stderr.reopen('/dev/null', 'a+')
-
-  end
-
-  CLI_OPTIONS[:config_file_paths]= []
-  o.on('-K', '--config FILE_PATH', 'File path to the .faraday.rb if you want use other than default') do |file_path|
-    CLI_OPTIONS[:config_file_paths] << File.absolute_path(file_path)
-  end
-
-  o.on('-M', '--middlewares', 'Show current middleware stack') do
-    CLI_OPTIONS[:flags] << :show_middlewares
-  end
-
-  o.on('-W', '--without_middlewares', 'Make request without consuming middleware file(s)') do
-    CLI_OPTIONS[:flags] << :without_middlewares
-  end
-
-  # Z
-
-  o.parse!
-
-end
-
-ALLOWED_HTTP_METHODS = %w(get head post put patch delete options)
-raise('invalid http method given') unless ALLOWED_HTTP_METHODS.include?(CLI_OPTIONS[:http_method])
 is_verbose = !CLI_OPTIONS[:flags].include?(:silent) && CLI_OPTIONS[:flags].include?(:verbose)
 
 connection = Faraday.new do |builder|
