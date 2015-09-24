@@ -4,3 +4,4 @@
  -D, --dump-header FILE  Write the headers to FILE
  -H, --header LINE   Pass custom header LINE to server (H)
  -x, --proxy [PROTOCOL://]HOST[:PORT]  Use proxy on given port
+ -:, --next          Allows the following URL to use a separate set of options

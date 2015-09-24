@@ -8,8 +8,6 @@ require 'faraday/cli'
 CLI_OPTIONS = Faraday::CLI::Option::Parser.new.parse!
 Faraday::CLI::Option::Validator.validate(CLI_OPTIONS)
 
-is_verbose = !CLI_OPTIONS[:flags].include?(:silent) && CLI_OPTIONS[:flags].include?(:verbose)
-
 connection = Faraday.new do |builder|
   builder.use Faraday::Response::RaiseError
 
@@ -19,12 +17,16 @@ connection = Faraday.new do |builder|
 
   builder.request(:multipart) if CLI_OPTIONS[:flags].include?(:multipart)
 
-  if is_verbose
-    builder.use Faraday::CLI::Middleware::VerboseRequest
+  if CLI_OPTIONS[:flags].include?(:verbose)
     builder.response :logger
   end
 
-  builder.adapter(:net_http)
+  if CLI_OPTIONS[:flags].include?(:super_verbose)
+    builder.use Faraday::CLI::Middleware::VerboseRequest
+    builder.use Faraday::CLI::Middleware::VerboseResponse
+  end
+
+  builder.adapter(Faraday.default_adapter)
 end
 
 if CLI_OPTIONS[:flags].include?(:show_middlewares)
@@ -33,6 +35,7 @@ if CLI_OPTIONS[:flags].include?(:show_middlewares)
 end
 
 FARADAY_ACTIVE_CONNECTION= connection
+
 def active_connection
   FARADAY_ACTIVE_CONNECTION
 end
@@ -56,10 +59,11 @@ begin
 
   end
 
-  $stdout.puts(Faraday::CLI::ResponseFormatter.format(response, *CLI_OPTIONS[:flags]))
+  $stdout.puts(response.body)
 
-rescue Faraday::Error => ex
+rescue Faraday::ClientError => ex
   $stdout.puts(ex.message)
+  $stdout.puts(ex.response[:body]) unless ex.response.nil?
   exit(1)
 
 rescue URI::InvalidURIError => ex

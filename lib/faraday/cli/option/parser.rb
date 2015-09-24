@@ -61,6 +61,10 @@ class Faraday::CLI::Option::Parser
         options[:flags] << :verbose
       end
 
+      o.on('--super-verbose', 'Make the operation even more talkative') do
+        options[:flags] << :super_verbose
+      end
+
       o.on('-s', '--silent', "Silent mode (don't output anything)") do
         options[:flags] << :silent
         $stdout.reopen('/dev/null', 'a+')
