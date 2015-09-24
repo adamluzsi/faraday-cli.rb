@@ -6,7 +6,7 @@ end
 require 'faraday/cli'
 
 CLI_OPTIONS = Faraday::CLI::Option::Parser.new.parse!
-Faraday::CLI::Option::Validator.validate(CLI_OPTIONS)
+Faraday::CLI::Option::Validator.validate(ARGV,CLI_OPTIONS)
 
 connection = Faraday.new do |builder|
   builder.use Faraday::Response::RaiseError
@@ -44,7 +44,6 @@ begin
 
   response = connection.public_send(CLI_OPTIONS[:http_method].downcase) do |request|
 
-    raise('Missing URL for request!') if ARGV[0].nil?
     request.url(ARGV[0])
 
     CLI_OPTIONS[:http_headers].each do |key, value|

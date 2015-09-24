@@ -3,8 +3,16 @@ module Faraday::CLI::Option::Validator
 
   ALLOWED_HTTP_METHODS = %w(get head post put patch delete options)
 
-  def validate(options_hash)
+  def validate(argv,options_hash)
+    validate_url(argv[0])
     validate_http_method(options_hash)
+  end
+
+  def validate_url(url_str)
+    if url_str.nil? || url_str == ''
+      $stderr.puts('Missing URL to make request!')
+      exit(1)
+    end
   end
 
   protected
