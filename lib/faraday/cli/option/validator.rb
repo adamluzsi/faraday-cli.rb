@@ -8,14 +8,15 @@ module Faraday::CLI::Option::Validator
     validate_http_method(options_hash)
   end
 
+
+  protected
+
   def validate_url(url_str)
     if url_str.nil? || url_str == ''
       $stderr.puts('Missing URL to make request!')
       exit(1)
     end
   end
-
-  protected
 
   def validate_http_method(options_hash)
     unless ALLOWED_HTTP_METHODS.include?(options_hash[:http_method])
