@@ -34,10 +34,13 @@ Usage: faraday-cli [options] <url>
                                      Pass File upload io in the request pointing to the given file
     -A, --user-agent STRING          Send User-Agent STRING to server (H)
     -o, --output FILE_PATH           Write to FILE instead of stdout
+    -v, --verbose                    Make the operation more talkative
+        --super-verbose              Make the operation even more talkative
     -s, --silent                     Silent mode (don't output anything)
-    -c, --config FILE_PATH           File path to the .faraday.rb if you want use other than default
+    -K, --config FILE_PATH           File path to the .faraday.rb if you want use other than default
     -M, --middlewares                Show current middleware stack
-    
+    -W, --without_middlewares        Make request without consuming middleware file(s)
+
 faraday-cli http://www.google.com -q q=foo
 faraday-cli http://example.org -d "payload string"
 ```
