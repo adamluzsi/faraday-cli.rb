@@ -15,7 +15,7 @@ class Faraday::CLI::Option::Parser
       end
 
       o.on('-H', '--header HEADER:VALUE', 'Pass custom header LINE to server (H)') do |header|
-        options[:http_headers].push(header.split(':'))
+        options[:http_headers].push(header.split(/: */))
       end
 
       o.on('-q', '--query key=value', 'Pass Query key values to use in the request') do |raw_query_pair|
@@ -69,10 +69,8 @@ class Faraday::CLI::Option::Parser
         options[:flags] << :silent
         $stdout.reopen('/dev/null', 'a+')
         $stderr.reopen('/dev/null', 'a+')
-
       end
 
-      options[:config_file_paths]= []
       o.on('-K', '--config FILE_PATH', 'File path to the .faraday.rb if you want use other than default') do |file_path|
         options[:config_file_paths] << File.absolute_path(file_path)
       end
@@ -101,6 +99,7 @@ class Faraday::CLI::Option::Parser
     options_hash[:params]= []
     options_hash[:http_method]= 'get'
     options_hash[:http_headers]= []
+    options_hash[:config_file_paths]= []
   end
 
 end
