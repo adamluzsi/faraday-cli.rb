@@ -19,7 +19,13 @@ class Faraday::CLI::Option::Parser
       end
 
       o.on('-q', '--query key=value', 'Pass Query key values to use in the request') do |raw_query_pair|
-        options[:params].push(raw_query_pair.split('='))
+        separator = '='
+
+        parts = raw_query_pair.split(separator)
+        query_key = parts.shift
+        query_value = parts.join(separator)
+
+        options[:params].push([query_key,query_value])
       end
 
       o.on('-d', '--data PAYLOAD_STRING', 'HTTP POST data (H)') { |payload| options[:body]= payload }
@@ -94,12 +100,13 @@ class Faraday::CLI::Option::Parser
 
   protected
 
-  def merge_defaults(options_hash)
-    options_hash[:flags]= []
-    options_hash[:params]= []
-    options_hash[:http_method]= 'get'
-    options_hash[:http_headers]= []
-    options_hash[:config_file_paths]= []
+  def merge_defaults(hash)
+    hash[:flags]= []
+    hash[:params]= []
+    hash[:http_method]= 'get'
+    hash[:http_headers]= []
+    hash[:config_file_paths]= []
+    hash
   end
 
 end
