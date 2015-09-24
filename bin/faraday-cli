@@ -64,22 +64,27 @@ OptionParser.new do |o|
   #   CLI_OPTIONS[:proxy]= {host: host, port: port}
   # end
 
-  o.on('-v','--verbose','Make the operation more talkative') do
+  o.on('-v', '--verbose', 'Make the operation more talkative') do
     CLI_OPTIONS[:flags] << :verbose
   end
 
-  o.on('-s', '--silent', "Silent mode (don't output anything)") { CLI_OPTIONS[:flags] << :silent }
+  o.on('-s', '--silent', "Silent mode (don't output anything)") do
+    CLI_OPTIONS[:flags] << :silent
+    $stdout.reopen('/dev/null', 'a+')
+    $stderr.reopen('/dev/null', 'a+')
+
+  end
 
   CLI_OPTIONS[:config_file_paths]= []
   o.on('-K', '--config FILE_PATH', 'File path to the .faraday.rb if you want use other than default') do |file_path|
     CLI_OPTIONS[:config_file_paths] << File.absolute_path(file_path)
   end
 
-  o.on('-M','--middlewares','Show current middleware stack') do
+  o.on('-M', '--middlewares', 'Show current middleware stack') do
     CLI_OPTIONS[:flags] << :show_middlewares
   end
 
-  o.on('-W','--without_middlewares','Make request without consuming middleware file(s)') do
+  o.on('-W', '--without_middlewares', 'Make request without consuming middleware file(s)') do
     CLI_OPTIONS[:flags] << :without_middlewares
   end
 
@@ -91,18 +96,23 @@ end
 
 ALLOWED_HTTP_METHODS = %w(get head post put patch delete options)
 raise('invalid http method given') unless ALLOWED_HTTP_METHODS.include?(CLI_OPTIONS[:http_method])
+is_verbose = !CLI_OPTIONS[:flags].include?(:silent) && CLI_OPTIONS[:flags].include?(:verbose)
 
 connection = Faraday.new do |builder|
+  builder.use Faraday::Response::RaiseError
 
   unless CLI_OPTIONS[:flags].include?(:without_middlewares)
     Faraday::CLI::MiddlewareFetcher.extend!(builder, *CLI_OPTIONS[:config_file_paths])
   end
 
   builder.request(:multipart) if CLI_OPTIONS[:flags].include?(:multipart)
-  builder.response :logger if !CLI_OPTIONS[:flags].include?(:silent) && CLI_OPTIONS[:flags].include?(:verbose)
+
+  if is_verbose
+    builder.use Faraday::CLI::Middleware::VerboseRequest
+    builder.response :logger
+  end
 
   builder.adapter(:net_http)
-
 end
 
 if CLI_OPTIONS[:flags].include?(:show_middlewares)
@@ -110,22 +120,38 @@ if CLI_OPTIONS[:flags].include?(:show_middlewares)
   exit
 end
 
-response = connection.public_send(CLI_OPTIONS[:http_method].downcase) do |request|
-
-  raise('Missing URL for request!') if ARGV[0].nil?
-  request.url(ARGV[0])
-
-  CLI_OPTIONS[:http_headers].each do |key, value|
-    request.headers[key]=value
-  end
-
-  CLI_OPTIONS[:params].each do |key, value|
-    request.params[key]=value
-  end
-
-  request.body = CLI_OPTIONS[:body] unless CLI_OPTIONS[:body].nil?
-
+FARADAY_ACTIVE_CONNECTION= connection
+def active_connection
+  FARADAY_ACTIVE_CONNECTION
 end
 
-$stdout.puts Faraday::CLI::ResponseFormatter.format(response,*CLI_OPTIONS[:flags]) unless CLI_OPTIONS[:flags].include?(:silent)
-exit(1) if (400..599).include?(response.status)
+begin
+
+  response = connection.public_send(CLI_OPTIONS[:http_method].downcase) do |request|
+
+    raise('Missing URL for request!') if ARGV[0].nil?
+    request.url(ARGV[0])
+
+    CLI_OPTIONS[:http_headers].each do |key, value|
+      request.headers[key]=value
+    end
+
+    CLI_OPTIONS[:params].each do |key, value|
+      request.params[key]=value
+    end
+
+    request.body = CLI_OPTIONS[:body] unless CLI_OPTIONS[:body].nil?
+
+  end
+
+  $stdout.puts(Faraday::CLI::ResponseFormatter.format(response, *CLI_OPTIONS[:flags]))
+
+rescue Faraday::Error => ex
+  $stdout.puts(ex.message)
+  exit(1)
+
+rescue URI::InvalidURIError => ex
+  $stdout.puts(ex.message)
+  exit(1)
+
+end
