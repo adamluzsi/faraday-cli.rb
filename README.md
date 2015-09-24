@@ -55,16 +55,19 @@ you can use any faraday middlewares as how you pleased.
  
 ```ruby
 
-class MyAwesomeMiddleware
+class MyAwesomeMiddleware < Faraday::Middleware
 
-  def initialize(app)
-    @app = app
-  end
+  def call(request_env)
 
-  def call(env)
-    puts env.object_id
-    @app.call(env)
-  end
+    # before main request
+
+    @app.call(request_env).on_complete do |response_env|
+
+      # after main request
+  
+    end
+
+  end 
 
 end
 
