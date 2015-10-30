@@ -15,7 +15,7 @@ class Faraday::CLI::Option::Parser
       end
 
       o.on('-H', '--header HEADER:VALUE', 'Pass custom header LINE to server (H)') do |header|
-        options[:http_headers].push(header.split(/: */))
+        options[:http_headers].push(header.split(/:\s*/))
       end
 
       o.on('-q', '--query key=value', 'Pass Query key values to use in the request') do |raw_query_pair|

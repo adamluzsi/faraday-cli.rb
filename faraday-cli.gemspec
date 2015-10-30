@@ -12,7 +12,7 @@ Gem::Specification.new do |spec|
   spec.homepage      = 'https://github.com/adamluzsi/faraday-cli.rb'
 
   spec.files         = `git ls-files -z`.split("\x0").reject { |f| f.match(%r{^(test|spec|features)/}) }
-  spec.bindir        = 'bin'
+  spec.bindir        = 'exec'
   spec.executables   = spec.files.grep(%r{^bin/}) { |f| File.basename(f) }
                            .select{|cli_command| cli_command =~ /^faraday\-cli/  }
 
