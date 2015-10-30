@@ -25,22 +25,22 @@ module Faraday::CLI::MiddlewareFetcher
           file_paths.push(*Dir.glob(given_path)); file_paths
         end
 
-      when !(file_paths = Dir.glob(File.join(Dir.pwd, NAME_PATH_MATCHER))).empty?
+      when !(file_paths = fetch_file_paths(Dir.pwd)).empty?
         file_paths
 
-      when !(file_paths = folder_content(Dir.pwd, NAME_PATH_MATCHER)).empty?
+      when !(file_paths = fetch_file_paths_from_folder(Dir.pwd)).empty?
         file_paths
 
-      when !(file_paths = Dir.glob(File.join(PWD.pwd, NAME_PATH_MATCHER))).empty?
+      when !(file_paths = fetch_file_paths(PWD.pwd)).empty?
         file_paths
 
-      when !(file_paths = folder_content(PWD.pwd, NAME_PATH_MATCHER)).empty?
+      when !(file_paths = fetch_file_paths_from_folder(PWD.pwd)).empty?
         file_paths
 
-      when !(file_paths = Dir.glob(File.join(ENV['HOME'], NAME_PATH_MATCHER))).empty?
+      when !(file_paths = fetch_file_paths(ENV['HOME'])).empty?
         file_paths
 
-      when !(file_paths = folder_content(ENV['HOME'], NAME_PATH_MATCHER)).empty?
+      when !(file_paths = fetch_file_paths_from_folder(ENV['HOME'])).empty?
         file_paths
 
       else
@@ -49,11 +49,18 @@ module Faraday::CLI::MiddlewareFetcher
     end
   end
 
+  private
 
-  protected
+  def fetch_file_paths_from_folder(*from_folder)
+    select_file_paths(Dir.glob(File.join(*from_folder,NAME_PATH_MATCHER, '*.{rb,ru}')))
+  end
 
-  def folder_content(main_path, file_name)
-    Dir.glob(File.join(main_path, file_name, '*.rb')).select { |path| not File.directory?(path) }
+  def fetch_file_paths(*from_folder)
+    select_file_paths(Dir.glob(File.join(*from_folder, NAME_PATH_MATCHER)))
+  end
+
+  def select_file_paths(file_paths)
+    file_paths.select { |path| File.exists?(path) and not File.directory?(path)  }
   end
 
 end
