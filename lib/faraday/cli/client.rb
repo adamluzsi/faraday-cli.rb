@@ -7,7 +7,6 @@ class Faraday::CLI::Client
   def start
 
     cli_options = Faraday::CLI::Option::Parser.new.parse!
-    Faraday::CLI::Option::Validator.validate(@argv,cli_options)
 
     connection = Faraday.new do |builder|
       builder.use Faraday::Response::RaiseError
@@ -35,6 +34,7 @@ class Faraday::CLI::Client
       exit
     end
 
+    Faraday::CLI::Option::Validator.validate(@argv,cli_options)
     Faraday::CLI.active_connection = connection.dup
 
     begin
