@@ -2,6 +2,8 @@ require 'pwd'
 module Faraday::CLI::MiddlewareFetcher
   extend self
 
+  NAME_PATH_MATCHER = '{.faraday,.faraday.rb,.faraday-cli}'
+
   require 'faraday/cli/middleware_fetcher/container'
 
   def extend!(faraday_connection_builder, *config_file_paths)
@@ -12,9 +14,6 @@ module Faraday::CLI::MiddlewareFetcher
   protected
 
   def get_file_paths(config_file_paths)
-    file_name = '{.faraday.rb,.faraday}'
-    folder_name = '{.faraday.rb,.faraday,.faraday-cli}'
-
     case
 
       when !config_file_paths.empty?
@@ -26,22 +25,22 @@ module Faraday::CLI::MiddlewareFetcher
           file_paths.push(*Dir.glob(given_path)); file_paths
         end
 
-      when !(file_paths = Dir.glob(File.join(Dir.pwd, file_name))).empty?
+      when !(file_paths = Dir.glob(File.join(Dir.pwd, NAME_PATH_MATCHER))).empty?
         file_paths
 
-      when !(file_paths = folder_content(Dir.pwd, folder_name)).empty?
+      when !(file_paths = folder_content(Dir.pwd, NAME_PATH_MATCHER)).empty?
         file_paths
 
-      when !(file_paths = Dir.glob(File.join(PWD.pwd, file_name))).empty?
+      when !(file_paths = Dir.glob(File.join(PWD.pwd, NAME_PATH_MATCHER))).empty?
         file_paths
 
-      when !(file_paths = folder_content(PWD.pwd, folder_name)).empty?
+      when !(file_paths = folder_content(PWD.pwd, NAME_PATH_MATCHER)).empty?
         file_paths
 
-      when !(file_paths = Dir.glob(File.join(ENV['HOME'], file_name))).empty?
+      when !(file_paths = Dir.glob(File.join(ENV['HOME'], NAME_PATH_MATCHER))).empty?
         file_paths
 
-      when !(file_paths = folder_content(ENV['HOME'], folder_name)).empty?
+      when !(file_paths = folder_content(ENV['HOME'], NAME_PATH_MATCHER)).empty?
         file_paths
 
       else
@@ -53,8 +52,8 @@ module Faraday::CLI::MiddlewareFetcher
 
   protected
 
-  def folder_content(main_path, folder_name)
-    Dir.glob(File.join(main_path, folder_name, '*.rb')).select { |path| not File.directory?(path) }
+  def folder_content(main_path, file_name)
+    Dir.glob(File.join(main_path, file_name, '*.rb')).select { |path| not File.directory?(path) }
   end
 
 end
