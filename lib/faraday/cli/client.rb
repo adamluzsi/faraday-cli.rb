@@ -35,7 +35,7 @@ class Faraday::CLI::Client
       exit
     end
 
-    Faraday::CLI.active_connection = connection
+    Faraday::CLI.active_connection = connection.dup
 
     begin
 
