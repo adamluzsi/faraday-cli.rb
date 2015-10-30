@@ -12,11 +12,10 @@ Gem::Specification.new do |spec|
   spec.homepage      = 'https://github.com/adamluzsi/faraday-cli.rb'
 
   spec.files         = `git ls-files -z`.split("\x0").reject { |f| f.match(%r{^(test|spec|features)/}) }
-  spec.bindir        = 'exec'
-  spec.executables   = spec.files.grep(%r{^bin/}) { |f| File.basename(f) }
-                           .select{|cli_command| cli_command =~ /^faraday\-cli/  }
-
   spec.require_paths = ['lib']
+
+  spec.bindir        = 'exec'
+  spec.executables   = spec.files.grep(%r{^exec/}) { |f| File.basename(f) }
 
   spec.add_development_dependency 'bundler', '>= 1.10'
   spec.add_development_dependency 'rake'
