@@ -1,0 +1,5 @@
+#!/usr/bin/env ruby
+PROJECT_ROOT = File.realpath(File.join(File.dirname(__FILE__),'..'))
+lib_folder = File.join(PROJECT_ROOT, 'lib')
+$LOAD_PATH.unshift(lib_folder) if Dir.exists?(lib_folder)
+load(File.join(PROJECT_ROOT,'exec','faraday-cli'))

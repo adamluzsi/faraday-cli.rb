@@ -42,6 +42,7 @@ class Faraday::CLI::Client
       response = connection.public_send(cli_options[:http_method].downcase) do |request|
 
         request.url(@argv[0])
+        request.proxy(cli_options[:proxy_url]) unless cli_options[:proxy_url].nil?
 
         cli_options[:http_headers].each do |key, value|
           request.headers[key]=value

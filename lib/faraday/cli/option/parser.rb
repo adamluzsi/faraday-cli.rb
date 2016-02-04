@@ -28,6 +28,8 @@ class Faraday::CLI::Option::Parser
         options[:params].push([query_key,query_value])
       end
 
+      text = get_stdin_content
+      options[:body]= text unless text.nil?
       o.on('-d', '--data PAYLOAD_STRING', 'HTTP POST data (H)') { |payload| options[:body]= payload }
 
       o.on('--upload_file KEY=FILE_PATH[:CONTENT_TYPE]', 'Pass File upload io in the request pointing to the given file') do |payload_file_path|
@@ -56,12 +58,16 @@ class Faraday::CLI::Option::Parser
         $stderr.reopen(out_file_path, 'a+')
       end
 
-      # o.on('-x', '--proxy HOST:PORT', 'HOST[:PORT] Use proxy on given port') do |host_port_str|
-      #   host, port = host_port_str.split(':')
-      #   port = '80' if port.nil?
-      #
-      #   options[:proxy]= {host: host, port: port}
-      # end
+      # --proxy-anyauth  Pick "any" proxy authentication method (H)
+      # --proxy-basic   Use Basic authentication on the proxy (H)
+      # --proxy-digest  Use Digest authentication on the proxy (H)
+      # --proxy-negotiate  Use HTTP Negotiate (SPNEGO) authentication on the proxy (H)
+      # --proxy-ntlm    Use NTLM authentication on the proxy (H)
+      # --proxy-service-name NAME  SPNEGO proxy service name
+      # -U, --proxy-user USER[:PASSWORD]  Proxy user and password
+      o.on('-x', '--proxy [PROTOCOL://]HOST[:PORT]  Use proxy on given port') do |proxy_url|
+        options[:proxy_url]= proxy_url.to_s
+      end
 
       o.on('-v', '--verbose', 'Make the operation more talkative') do
         options[:flags] << :verbose
@@ -89,13 +95,15 @@ class Faraday::CLI::Option::Parser
         options[:flags] << :without_middlewares
       end
 
-      # Z
-
       o.parse!
 
     end
 
     options
+  end
+
+  def get_stdin_content
+    ($stdin.tty? ? nil : $stdin.read)
   end
 
   protected
