@@ -9,9 +9,10 @@ Escher::RackMiddleware.config do |c|
 end
 
 class YourAwesomeApp
-
   def call(env)
     puts YAML.dump(env)
+    puts_payload(env)
+
     response = Rack::Response.new
     response.write 'OK'
     response.status = 200
@@ -19,11 +20,19 @@ class YourAwesomeApp
     response.finish
   end
 
+  def puts_payload(env)
+    payload = ''
+    while chunk = env['rack.input'].gets
+      payload.concat(chunk)
+    end
+
+    puts "payload:\n", payload
+  end
 end
 
 use ECHO
 use Escher::RackMiddleware
 run YourAwesomeApp.new
 
-#Rack::Server.start :app => YourAwesomeApp,
+# Rack::Server.start :app => YourAwesomeApp,
 #                   :Port => ARGV[0].to_i
