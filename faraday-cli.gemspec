@@ -6,6 +6,7 @@ Gem::Specification.new do |spec|
   spec.version       = VERSION
   spec.authors       = ["Adam Luzsi"]
   spec.email         = ["adamluzsi@gmail.com"]
+  spec.license       = 'Apache License 2.0'
 
   spec.summary       = %q{Console line interface for faraday gem.}
   spec.description   = %q{Console line interface for faraday gem client so you can use your favorite middleware based ruby http client on the terminal!}
